@@ -1,31 +1,27 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torch.nn.functional as F
 import torch.distributed as dist
-from mpmath import mp
+import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
 import torchvision
 import torchvision.transforms as transforms
-import os
+import torch.nn.functional as F
 
-
-def setup(rank, world_size, backend='nccl'):
-    os.environ['MASTER_ADDR'] = '127.0.0.1'
-    os.environ['MASTER_PORT'] = '12345'
-
+def setup(rank, world_size):
     # Initialize the distributed backend
-    dist.init_process_group(backend=backend, init_method='env://', rank=rank, world_size=world_size)
-
+    dist.init_process_group(backend='nccl', init_method='tcp://localhost:23456', rank=rank, world_size=world_size)
 
 def cleanup():
     # Clean up the distributed backend
     dist.destroy_process_group()
 
+def train(rank, world_size):
+    setup(rank, world_size)
 
-# Function to set up the model for DDP
-def setup_model(rank, world_size):
+    torch.manual_seed(42)  # Set seed for reproducibility
+
     # Load CIFAR-10 dataset
     transform = transforms.Compose([
         transforms.ToTensor(),
@@ -39,19 +35,25 @@ def setup_model(rank, world_size):
 
     # Define a simple CNN model
     class SimpleCNN(nn.Module):
+        class SimpleCNN(nn.Module):
+            def __init__(self):
+                super(SimpleCNN, self).__init__()
+                self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1)
+                self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
+                self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+                self.fc1 = nn.Linear(32 * 8 * 8, 128)
+                self.fc2 = nn.Linear(128, 10)
 
-        # Initialize model and wrap with DDP
+            def forward(self, x):
+                x = F.relu(self.conv1(x))
+                x = self.pool(F.relu(self.conv2(x)))
+                x = x.view(-1, 32 * 8 * 8)
+                x = F.relu(self.fc1(x))
+                x = self.fc2(x)
+                return x
+
     model = SimpleCNN()
     model = DDP(model, device_ids=[rank])
-
-    return model, train_loader
-
-
-# Function for training loop
-def train(rank, world_size):
-    setup(rank, world_size)
-
-    model, train_loader = setup_model(rank, world_size)
 
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
     criterion = nn.CrossEntropyLoss()
@@ -59,7 +61,7 @@ def train(rank, world_size):
     # Training loop
     for epoch in range(5):  # Adjust the number of epochs as needed
         model.train()
-        train_loader.sampler.set_epoch(epoch)
+        train_sampler.set_epoch(epoch)
         for i, data in enumerate(train_loader, 0):
             inputs, labels = data
             optimizer.zero_grad()
@@ -70,8 +72,6 @@ def train(rank, world_size):
 
     cleanup()
 
-
-# Define main function for running distributed training
 if __name__ == "__main__":
     world_size = 4  # Total number of processes (GPUs/Nodes)
     mp.spawn(train, args=(world_size,), nprocs=world_size, join=True)

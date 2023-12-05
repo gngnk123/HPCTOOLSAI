@@ -35,24 +35,28 @@ class SimpleCNN(nn.Module):
         x = self.fc3(x)
         return x
 
-# Initialize the network and optimizer
-net = SimpleCNN()
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
-# Training loop
-for epoch in range(5):  # Adjust the number of epochs as needed
-    running_loss = 0.0
-    for i, data in enumerate(trainloader, 0):
-        inputs, labels = data
-        optimizer.zero_grad()
-        outputs = net(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-        running_loss += loss.item()
-        if i % 200 == 199:  # Print every 200 mini-batches
-            print(f"[{epoch + 1}, {i + 1}] loss: {running_loss / 200:.3f}")
-            running_loss = 0.0
+# Function to train the model
+def train_model():
+    net = SimpleCNN()
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
-print("Finished Training")
+    for epoch in range(5):  # Adjust the number of epochs as needed
+        running_loss = 0.0
+        for i, data in enumerate(trainloader, 0):
+            inputs, labels = data
+            optimizer.zero_grad()
+            outputs = net(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
+            if i % 200 == 199:  # Print every 200 mini-batches
+                print(f"[{epoch + 1}, {i + 1}] loss: {running_loss / 200:.3f}")
+                running_loss = 0.0
+
+    print("Finished Training")
+
+if __name__ == '__main__':
+    train_model()
