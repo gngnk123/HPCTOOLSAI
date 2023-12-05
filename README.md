@@ -13,6 +13,7 @@ Training time for 5 epochs: Approximately 8-10 minutes.
 GPU Utilization: Around 90-100% on a single GPU.
 Throughput: Processing around 500-600 samples per second.
 
+![image](https://github.com/gngnk123/HPCTOOLSAI/assets/114820170/72d31374-3a23-4c6b-9ab3-90d4f2e6c3d7)
 
 Distributed Training 
 
