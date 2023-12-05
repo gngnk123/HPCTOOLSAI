@@ -40,7 +40,7 @@ def setup_model(rank, world_size):
     # Define a simple CNN model
     class SimpleCNN(nn.Module):
 
-    # Initialize model and wrap with DDP
+        # Initialize model and wrap with DDP
     model = SimpleCNN()
     model = DDP(model, device_ids=[rank])
 
