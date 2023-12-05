@@ -1,3 +1,4 @@
+student 1- Nika Ghonghadze student 2- Giga Uchaneishvili
 # HPCTOOLSAI
 
 ![image](https://github.com/gngnk123/HPCTOOLSAI/assets/114820170/31f75125-1119-49b9-b407-4d8e6e08b4db)
